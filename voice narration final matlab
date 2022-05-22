@@ -1,0 +1,155 @@
+
+function rec = speechrecognitionFinal
+% Add assembly
+NET.addAssembly('System.Speech');
+% Construct engine
+rec = System.Speech.Recognition.SpeechRecognitionEngine;
+rec.SetInputToDefaultAudioDevice;
+rec.LoadGrammar(System.Speech.Recognition.DictationGrammar);
+% Define listener callback
+addlistener(rec, 'SpeechRecognized', @recognizedFcn);
+% Start recognition
+rec.RecognizeAsync(System.Speech.Recognition.RecognizeMode.Multiple);
+% Callback
+function recognizedFcn(obj, e)
+h = actxserver('WScript.Shell');
+% Get text
+txt = char(e.Result.Text);
+% Split into words
+w = regexp(txt, '\s', 'split');
+if (length(w) > 1)
+    % Look for the occurrence of the phrase "search for"
+    idx = find(strcmp(w(1:end-1), 'search') & ...
+        strcmp(w(2:end), 'for'), 1, 'first');
+    if ~isempty(idx) && length(w) >= idx+2
+        % The words after are the search terms
+        searchTerm = sprintf('%s+', w{idx+2:end});
+        searchTerm(end) = '';
+          % Search on the web
+          web(['http://www.google.com/search?q=', searchTerm]);
+          fprintf(2, 'search for "%s"\n', strrep(searchTerm, '+', ' '));
+          
+%------------Opening Microsoft Word or Notepad------------------------------
+
+elseif strcmpi(w{1}, 'Launch') && strcmpi(w{2}, 'Microsoft') && strcmpi(w{3}, 'word')
+    h = actxserver('WScript.Shell');
+    disp(txt);
+    disp('Launching Word');
+    h.Run('Winword');
+%     h.AppActivate('WinWord');  
+      
+elseif strcmpi(w{1}, 'Launch') && strcmpi(w{2}, 'NotePad')
+    h = actxserver('WScript.Shell');
+    disp(txt);
+    disp('Launching Notepad');
+    h.Run('notepad');
+%     h.AppActivate('notepad'); 
+      
+%------------ Voice Commands ------------------------------
+elseif strcmpi(w{1}, 'Case') && strcmpi(w{2}, 'Change')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{CAPSLOCK}");
+
+elseif strcmpi(w{1}, 'save') && strcmpi(w{2}, 'file')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^s");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'space')
+    h = actxserver('WScript.Shell');
+    h.SendKeys(' ');
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'enter')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{ENTER}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'undo')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{z}");
+
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'redo')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{y}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'select')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^+{LEFT}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'copy')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{c}");
+
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'paste')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{v}");
+    
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'print')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{p}");
+
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'cut')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{x}");
+
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'delete')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{DELETE}");
+      
+elseif strcmpi(w{1}, 'system') && strcmpi(w{2}, 'exit')
+    h = actxserver('WScript.Shell');
+	h.SendKeys("%{F4}");
+      
+elseif strcmpi(w{1}, 'system') && strcmpi(w{2}, 'stop')
+    obj.RecognizeAsyncStop;  
+    obj.delete;
+    disp(txt);
+    disp('Stopping Speech Recognition. Thank you for using!');
+%--------------------ARROW KEYS-----------------------
+
+elseif strcmpi(w{1}, 'page') && strcmpi(w{2}, 'up')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{PGUP}");
+      
+elseif strcmpi(w{1}, 'page') && strcmpi(w{2}, 'down')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{PGDN}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'left')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{LEFT}");
+
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'right')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^{RIGHT}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'up')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{UP}");
+      
+elseif strcmpi(w{1}, 'cursor') && strcmpi(w{2}, 'down')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{Down}");
+%----------------------------------------------------------------    
+else 
+    disp(txt);
+    txt = convertCharsToStrings(txt);
+    h.SendKeys(txt);
+    h.SendKeys(' ');
+end      
+
+%--------------------------------------------------------      
+elseif length(w) == 1 && strcmpi(w{1}, 'backspace')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("^+{LEFT}");
+    h.SendKeys("{BACKSPACE}");
+      
+elseif length(w) == 1 && strcmpi(w{1}, 'delta')
+    h = actxserver('WScript.Shell');
+    h.SendKeys("{TAB}");   
+      
+else 
+      txt = convertCharsToStrings(txt);
+      h.SendKeys(txt); %possible fix to eliminate slow typing is to take the txt and use spaces as delimiters, record the positions of the delimeters and print the whole thing without space, then add delimiters.
+      h.SendKeys(' ');
+      disp(txt);
+      
+  end
